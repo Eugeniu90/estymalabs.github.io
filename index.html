@@ -255,7 +255,7 @@ footer{background:var(--dark);padding:32px}
 
 <div class="sav-group"><label>Team Size</label><div class="sav-slider-row"><input type="range" id="savTeam" min="1" max="25" value="5" class="sav-range"><span class="sav-val" id="savTeamVal">5 people</span></div><p class="sav-hint">Estimators, PMs, and sales reps who would use the platform</p></div>
 
-<div class="sav-group"><label>Proposals Per Month</label><div class="sav-slider-row"><input type="range" id="savProposals" min="1" max="50" value="10" class="sav-range"><span class="sav-val" id="savProposalsVal">10</span></div><p class="sav-hint">Quotes or proposals your team produces each month</p></div>
+<div class="sav-group"><label>Proposals Per Month</label><div class="sav-slider-row"><input type="range" id="savProposals" min="1" max="50" value="10" class="sav-range"><span class="sav-val" id="savProposalsVal">10</span></div><p class="sav-hint">Proposals per person, per month</p></div>
 
 <div class="sav-group"><label>Hours Per Proposal (Today)</label><div class="sav-slider-row"><input type="range" id="savHours" min="2" max="40" value="12" class="sav-range"><span class="sav-val" id="savHoursVal">12 hours</span></div><p class="sav-hint">From site assessment through final proposal delivery</p></div>
 
@@ -274,11 +274,13 @@ footer{background:var(--dark);padding:32px}
 <div class="sav-divider"></div>
 <div class="sav-row"><span class="sav-row-label">Avg rebates per project (industry)</span><span class="sav-row-value" id="resRebateAvg">~$7,500</span></div>
 <div class="sav-row"><span class="sav-row-label">Annual rebates you could surface</span><span class="sav-row-value green" id="resRebateTotal">$900,000</span></div>
+<div class="sav-divider"></div>
+<div class="sav-row"><span class="sav-row-label">&#9733; Recommended plan</span><span class="sav-row-value" id="resPlan" style="color:var(--accent)">Professional (€2,000/mo)</span></div>
 </div>
 
 <a href="#contact" class="btn btn-accent btn-lg" style="width:100%;margin-top:20px">Start Your Free Trial &#8594;</a>
 
-<div class="sav-note">These estimates assume a 75% reduction in proposal time based on workflow automation of site planning, estimating, and document generation. Revenue capacity shows potential throughput, not guaranteed wins.</div>
+<div class="sav-note">Estimates assume 75% reduction in proposal time through workflow automation. Hours and capacity scale with team size &times; proposals per person. Revenue capacity shows potential throughput, not guaranteed wins.</div>
 <div class="sav-source">Rebate data: U.S. DOE AFDC, DSIRE database. Average rebate range $5,000-$15,000 per commercial L2 installation.</div>
 
 </div></div></div></div></section>
@@ -320,25 +322,32 @@ function calcSavings(){
   document.getElementById('savHoursVal').textContent=hours+(hours===1?' hour':' hours');
   document.getElementById('savValueVal').textContent='$'+value.toLocaleString();
 
-  // 75% time reduction (conservative — based on automating site plan, estimate, proposal generation)
+  // 75% time reduction per proposal
   const reduction=0.75;
   const newHours=Math.max(Math.round(hours*(1-reduction)*10)/10,1);
   const savedPerProposal=hours-newHours;
-  const annualSaved=Math.round(savedPerProposal*proposals*12);
-  const extraProposals=Math.round((savedPerProposal*proposals*12)/hours);
+  // Team size scales total proposals (more people = more throughput)
+  const totalMonthlyProposals=proposals*team;
+  const annualSaved=Math.round(savedPerProposal*totalMonthlyProposals*12);
+  const extraProposals=Math.round((savedPerProposal*totalMonthlyProposals*12)/hours);
   const revCapacity=extraProposals*value;
 
-  // Rebate estimate: avg $5k-$15k per commercial project, we use $7.5k as middle
   const rebateAvg=Math.min(Math.round(value*0.15),15000);
-  const annualRebates=rebateAvg*proposals*12;
+  const annualRebates=rebateAvg*totalMonthlyProposals*12;
+
+  // Recommended plan based on team size
+  let plan='Starter (€1,000/mo)';
+  if(team>15) plan='Enterprise (Custom)';
+  else if(team>5) plan='Professional (€2,000/mo)';
 
   document.getElementById('resBigHours').textContent=annualSaved.toLocaleString();
   document.getElementById('resCurrentTime').textContent=hours+' hrs';
   document.getElementById('resNewTime').textContent=newHours+' hrs';
-  document.getElementById('resExtra').textContent='+'+extraProposals;
+  document.getElementById('resExtra').textContent='+'+extraProposals.toLocaleString();
   document.getElementById('resRevCap').textContent='$'+revCapacity.toLocaleString();
   document.getElementById('resRebateAvg').textContent='~$'+rebateAvg.toLocaleString();
   document.getElementById('resRebateTotal').textContent='$'+annualRebates.toLocaleString();
+  document.getElementById('resPlan').textContent=plan;
 }
 
 document.querySelectorAll('.sav-range').forEach(r=>r.addEventListener('input',calcSavings));
